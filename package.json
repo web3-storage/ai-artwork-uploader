@@ -1,0 +1,28 @@
+{
+  "name": "ai-artwork-uploader",
+  "version": "0.0.1",
+  "description": "A small static site that used the vanilla w3ui components to receive Ai generated Artwork from resources such as DiffusionBee to be shared on w3!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "vite build",
+    "start": "vite"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/web3-storage/ai-artwork-uploader.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/web3-storage/ai-artwork-uploader/issues"
+  },
+  "homepage": "https://github.com/web3-storage/ai-artwork-uploader#readme",
+  "dependencies": {
+    "@w3ui/keyring-core": "^1.0.1",
+    "@w3ui/uploader-core": "^2.0.1"
+  },
+  "devDependencies": {
+    "vite": "^3.2.0"
+  }
+}
