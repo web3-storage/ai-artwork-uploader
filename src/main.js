@@ -10,6 +10,12 @@ import {
 	loadDefaultIdentity
 } from '@w3ui/keyring-core'
 
+import {
+	encodeDirectory,
+	chunkBlocks,
+	uploadCarChunks
+} from '@w3ui/uploader-core'
+
 const SELECTORS = {
 	authForm: '#sign-up-in-form',
 	cancelRegistrationButton: '#cancel-registration',
@@ -36,14 +42,6 @@ export class RegisterForm extends window.HTMLElement {
 		this.signOutHandler = this.signOutHandler.bind(this)
 		this.formatTemplateContent = this.formatTemplateContent.bind(this)
 
-		const searchParams = new URLSearchParams(window.location.search);
-		const description = searchParams.get('description');
-		const parametersString = searchParams.get('params');
-		const parameters = JSON.parse(parametersString);
-		const imageURLs = searchParams.get('images').split(',');
-		const indexHTML = renderHTMLContactSheet(imageURLs, parameters, description);
-		console.log(description, parameters, imageURLs);
-		console.log(indexHTML);
 	}
 
 	async connectedCallback () {
@@ -71,6 +69,7 @@ export class RegisterForm extends window.HTMLElement {
 		this.replaceChildren(this.formatTemplateContent(templateContent))
 		this.signOutButton$ = document.querySelector(SELECTORS.signOutButton)
 		this.signOutButton$.addEventListener('click', this.signOutHandler)
+		uploadFiles()
 	}
 
 	toggleVerification () {
@@ -134,7 +133,7 @@ export class RegisterForm extends window.HTMLElement {
 }
 
 function renderHTMLContactSheet(imgs, params, prompt) {
-	const imgElms = imgs.map(img => `<img src="${img}"/>`).join();
+	const imgElms = imgs.map((img, index) => `<img src="/${index}.png"/>`).join();
 
 	let paramList = '';
 	for (const [key, value] of Object.entries(params)) {
@@ -147,20 +146,58 @@ function renderHTMLContactSheet(imgs, params, prompt) {
 	const html = `
 <!DOCTYPE html>
 <html>
-  <head>
-  <style>
-    .images img {
-      padding: 12px;
-    }
-  </style>
-  </head>
-  <body>
-    ${promptEl}${paramsEl}<div class='images'>${imgElms}</div>
-  </body>
+	<head>
+	<style>
+		.images img {
+			padding: 12px;
+		}
+	</style>
+	</head>
+	<body>
+		${promptEl}${paramsEl}<div class='images'>${imgElms}</div>
+	</body>
 </html>
-	`;
+`;
 
 	return html.trim();
+}
+
+function createFile(content, filename = "index.html") {
+	const blob = new Blob([content], {
+		type: "text/plain;charset=utf-8",
+	});
+	const file = new File([blob], filename);
+	return file;
+}
+
+async function uploadFiles() {
+	const searchParams = new URLSearchParams(window.location.search);
+	const description = searchParams.get('description');
+	const parametersString = searchParams.get('params');
+	const parameters = JSON.parse(parametersString);
+	const imageURLs = searchParams.get('images').split(',');
+	const indexHTML = renderHTMLContactSheet(imageURLs, parameters, description);
+	const indexHTMLBlob = createFile(indexHTML);
+
+	if (imageURLs.length > 0) {
+		const imageBlobs = await Promise.all(
+			imageURLs.map(async (url, index) => {
+				const response = await fetch(url);
+				const blob = await response.blob();
+				const file = new File([blob], `${index}.png`);
+				return file
+			})
+		)
+
+		const identity = await loadDefaultIdentity();
+		const { cid, blocks } = encodeDirectory([indexHTMLBlob, ...imageBlobs]);
+		const chunks = await chunkBlocks(blocks);
+		await uploadCarChunks(identity.signingPrincipal, chunkBlocks(blocks))
+
+		const CID = await cid
+
+		console.log('Uploaded to', `https://${CID.toString()}.ipfs.w3s.link`);
+	}
 }
 
 window.customElements.define('register-form', RegisterForm)
