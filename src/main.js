@@ -1,5 +1,7 @@
 import './assets/tachyons.min.css'
 
+import pProgress, { PProgress } from 'p-progress'
+
 import {
 	createIdentity,
 	registerIdentity,
@@ -21,7 +23,8 @@ const SELECTORS = {
 	cancelRegistrationButton: '#cancel-registration',
 	signOutButton: '#sign-out',
 	verificationTemplate: '#verification-required-template',
-	confirmationTemplate: '#registration-success-template'
+	confirmationTemplate: '#registration-success-template',
+	progressBar: '#upload-progress'
 }
 
 export const EVENTS = {
@@ -133,15 +136,15 @@ export class RegisterForm extends window.HTMLElement {
 }
 
 function renderHTMLContactSheet(imgs, params, prompt) {
-	const imgElms = imgs.map((img, index) => `<img src="/${index}.png"/>`).join();
+	const imgElms = imgs.map((img, index) => `<img src="/${index}.png"/>`).join('')
 
-	let paramList = '';
+	let paramList = ''
 	for (const [key, value] of Object.entries(params)) {
-		paramList += `<dt>${key}</dt><dd>${value}</dd>`;
+		paramList += `<dt>${key}</dt><dd>${value}</dd>`
 	}
 
-	const promptEl = `<h1>Prompt</h1><p>${prompt}</p>`;
-	const paramsEl = `<h1>Parameters</h1><dl>${paramList}</dl>`;
+	const promptEl = `<h1>Prompt</h1><p>${prompt}</p>`
+	const paramsEl = `<h1>Parameters</h1><dl>${paramList}</dl>`
 
 	const html = `
 <!DOCTYPE html>
@@ -157,46 +160,60 @@ function renderHTMLContactSheet(imgs, params, prompt) {
 		${promptEl}${paramsEl}<div class='images'>${imgElms}</div>
 	</body>
 </html>
-`;
+`
 
-	return html.trim();
+	return html.trim()
 }
 
 function createFile(content, filename = "index.html") {
 	const blob = new Blob([content], {
 		type: "text/plain;charset=utf-8",
 	});
-	const file = new File([blob], filename);
-	return file;
+	const file = new File([blob], filename)
+	return file
 }
 
 async function uploadFiles() {
-	const searchParams = new URLSearchParams(window.location.search);
-	const description = searchParams.get('description');
-	const parametersString = searchParams.get('params');
-	const parameters = JSON.parse(parametersString);
-	const imageURLs = searchParams.get('images').split(',');
-	const indexHTML = renderHTMLContactSheet(imageURLs, parameters, description);
-	const indexHTMLBlob = createFile(indexHTML);
+	const searchParams = new URLSearchParams(window.location.search)
+	const description = searchParams.get('description')
+	const parametersString = searchParams.get('params')
+	const parameters = JSON.parse(parametersString)
+	const imageURLs = searchParams.get('images').split(',')
+	const indexHTML = renderHTMLContactSheet(imageURLs, parameters, description)
+	const indexHTMLBlob = createFile(indexHTML)
 
 	if (imageURLs.length > 0) {
-		const imageBlobs = await Promise.all(
+		const imageBlobsPromise = PProgress.all(
 			imageURLs.map(async (url, index) => {
-				const response = await fetch(url);
-				const blob = await response.blob();
-				const file = new File([blob], `${index}.png`);
-				return file
+				try {
+					const response = await fetch(url)
+					const blob = await response.blob()
+					const file = new File([blob], `${index}.png`)
+					return file
+				} catch {
+					return undefined
+				}
 			})
 		)
 
-		const identity = await loadDefaultIdentity();
-		const { cid, blocks } = encodeDirectory([indexHTMLBlob, ...imageBlobs]);
-		const chunks = await chunkBlocks(blocks);
-		await uploadCarChunks(identity.signingPrincipal, chunkBlocks(blocks))
+		const upload = async () => {
+			const imageBlobs = await imageBlobsPromise
+			const identity = await loadDefaultIdentity()
+			const { cid, blocks } = encodeDirectory([indexHTMLBlob, ...imageBlobs.filter(blob => blob)])
+			const chunks = await chunkBlocks(blocks)
+			await uploadCarChunks(identity.signingPrincipal, chunkBlocks(blocks))
+			const CID = await cid
+			console.log('Uploaded to', `https://${CID.toString()}.ipfs.w3s.link`)
+		}
 
-		const CID = await cid
+		const uploadPromiseAll = PProgress.all([imageBlobsPromise, upload()])
 
-		console.log('Uploaded to', `https://${CID.toString()}.ipfs.w3s.link`);
+		uploadPromiseAll.onProgress((progress) => {
+			const progressBarEl = document.querySelector(SELECTORS.progressBar)
+			progressBarEl.setAttribute('value', progress * 100)
+			progressBarEl.innerText = `${Math.round(progress * 100)}%`
+		})
+
 	}
 }
 
