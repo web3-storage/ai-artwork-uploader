@@ -22,7 +22,6 @@
 						<button type="submit" class="ph3 pv2">Register</button>
 					</form>
 				</register-form>
-
 			</div>
 		</div>
 
@@ -30,9 +29,13 @@
 		<template id="registration-success-template">
 			<div>
 				<h1 class="near-white">Welcome <span data-email-slot></span>!</h1>
-				<p>You are logged in!!</p>
-				<button type="button" id="sign-out" class="ph3 pv2">Sign Out</button>
-				<progress id="upload-progress" max="100" value="0">0%</progress>
+				<p>Uploading&hellip;</p>
+				<div>
+					<progress id="upload-progress" max="100" value="0">0%</progress>
+				</div>
+				<div>
+					<a id="sign-out" class="f6 link dim br1 ba ph3 pv2 mb2 dib near-white pointer" role="button">Sign Out</a>
+				</div>
 			</div>
 		</template>
 
@@ -44,6 +47,18 @@
 				<button type="button" id="cancel-registration" class="ph3 pv2">Cancel</button>
 			</div>
 		</template>
+
+		<!-- Uploaded -->
+		<template id="upload-template">
+			<div>
+				<div class="flex justify-between items-baseline">
+					<p>Your artwork is successfully uploaded</p>
+					<a id="upload-link" href="" target="_blank" rel="noopener noreferrer" class="f6 link dim br-pill ba bw2 ph3 pv2 mb2 dib near-white">Get link</a>
+				</div>
+			</div>
+		</template>
+
+
 		<script type="module" src="main.js"></script>
 	</body>
 </html>

@@ -24,7 +24,9 @@ const SELECTORS = {
 	signOutButton: '#sign-out',
 	verificationTemplate: '#verification-required-template',
 	confirmationTemplate: '#registration-success-template',
-	progressBar: '#upload-progress'
+	uploadTemplate: '#upload-template',
+	progressBar: '#upload-progress',
+	uploadLink: '#upload-link'
 }
 
 export const EVENTS = {
@@ -37,14 +39,15 @@ export class RegisterForm extends window.HTMLElement {
 		super()
 		this.identity = null
 		this.email = null
+		this.rootCID = null
 		this.form$ = document.querySelector(SELECTORS.authForm)
 		this.confirmationTemplate$ = document.querySelector(SELECTORS.confirmationTemplate)
 		this.verificationTemplate$ = document.querySelector(SELECTORS.verificationTemplate)
+		this.uploadTemplate$ = document.querySelector(SELECTORS.uploadTemplate)
 		this.submitHandler = this.submitHandler.bind(this)
 		this.cancelRegistrationHandler = this.cancelRegistrationHandler.bind(this)
 		this.signOutHandler = this.signOutHandler.bind(this)
 		this.formatTemplateContent = this.formatTemplateContent.bind(this)
-
 	}
 
 	async connectedCallback () {
@@ -72,7 +75,7 @@ export class RegisterForm extends window.HTMLElement {
 		this.replaceChildren(this.formatTemplateContent(templateContent))
 		this.signOutButton$ = document.querySelector(SELECTORS.signOutButton)
 		this.signOutButton$.addEventListener('click', this.signOutHandler)
-		uploadFiles()
+		this.uploadFiles()
 	}
 
 	toggleVerification () {
@@ -80,6 +83,13 @@ export class RegisterForm extends window.HTMLElement {
 		this.replaceChildren(this.formatTemplateContent(templateContent))
 		this.cancelRegistrationButton$ = document.querySelector(SELECTORS.cancelRegistrationButton)
 		this.cancelRegistrationButton$.addEventListener('click', this.cancelRegistrationHandler)
+	}
+
+	toggleUploadLink (url) {
+		const templateContent = this.uploadTemplate$.content
+		this.replaceChildren(templateContent)
+		const uploadLink$ = this.querySelector(SELECTORS.uploadLink)
+		uploadLink$.href = url
 	}
 
 	disconnectedCallback () {
@@ -132,88 +142,87 @@ export class RegisterForm extends window.HTMLElement {
 				this.toggleConfirmation(true)
 			}
 		}
-	};
-}
-
-function renderHTMLContactSheet(imgs, params, prompt) {
-	const imgElms = imgs.map((img, index) => `<img src="/${index}.png"/>`).join('')
-
-	let paramList = ''
-	for (const [key, value] of Object.entries(params)) {
-		paramList += `<dt>${key}</dt><dd>${value}</dd>`
 	}
 
-	const promptEl = `<h1>Prompt</h1><p>${prompt}</p>`
-	const paramsEl = `<h1>Parameters</h1><dl>${paramList}</dl>`
+	renderHTMLContactSheet (imgs, params, prompt) {
+		const imgElms = imgs.map((img, index) => `<img src="/${index}.png"/>`).join('')
 
-	const html = `
-<!DOCTYPE html>
-<html>
-	<head>
-	<style>
-		.images img {
-			padding: 12px;
+		let paramList = ''
+		for (const [key, value] of Object.entries(params)) {
+			paramList += `<dt>${key}</dt><dd>${value}</dd>`
 		}
-	</style>
-	</head>
-	<body>
-		${promptEl}${paramsEl}<div class='images'>${imgElms}</div>
-	</body>
-</html>
-`
 
-	return html.trim()
-}
+		const promptEl = `<h1>Prompt</h1><p>${prompt}</p>`
+		const paramsEl = `<h1>Parameters</h1><dl>${paramList}</dl>`
 
-function createFile(content, filename = "index.html") {
-	const blob = new Blob([content], {
-		type: "text/plain;charset=utf-8",
-	});
-	const file = new File([blob], filename)
-	return file
-}
+		const html = `
+	<!DOCTYPE html>
+	<html>
+		<head>
+		<style>
+			.images img {
+				padding: 12px;
+			}
+		</style>
+		</head>
+		<body>
+			${promptEl}${paramsEl}<div class='images'>${imgElms}</div>
+		</body>
+	</html>
+	`
 
-async function uploadFiles() {
-	const searchParams = new URLSearchParams(window.location.search)
-	const description = searchParams.get('description')
-	const parametersString = searchParams.get('params')
-	const parameters = JSON.parse(parametersString)
-	const imageURLs = searchParams.get('images').split(',')
-	const indexHTML = renderHTMLContactSheet(imageURLs, parameters, description)
-	const indexHTMLBlob = createFile(indexHTML)
+		return html.trim()
+	}
 
-	if (imageURLs.length > 0) {
-		const imageBlobsPromise = PProgress.all(
-			imageURLs.map(async (url, index) => {
-				try {
-					const response = await fetch(url)
-					const blob = await response.blob()
-					const file = new File([blob], `${index}.png`)
-					return file
-				} catch {
-					return undefined
-				}
+	uploadFiles () {
+		const searchParams = new URLSearchParams(window.location.search)
+		const description = searchParams.get('description')
+		const parametersString = searchParams.get('params')
+		const parameters = JSON.parse(parametersString)
+		const imageURLs = searchParams.get('images').split(',')
+		const indexHTML = this.renderHTMLContactSheet(imageURLs, parameters, description)
+		const blob = new Blob([indexHTML], {
+			type: 'text/plain;charset=utf-8',
+		});
+		const indexHTMLBlob = new File([blob], 'index.html')
+
+
+		if (imageURLs.length > 0) {
+			const imageBlobsPromise = PProgress.all(
+				imageURLs.map(async (url, index) => {
+					try {
+						const response = await fetch(url)
+						const blob = await response.blob()
+						const file = new File([blob], `${index}.png`)
+						return file
+					} catch {
+						return undefined
+					}
+				})
+			)
+
+			const upload = async () => {
+				const imageBlobs = await imageBlobsPromise
+				const identity = await loadDefaultIdentity()
+				const { cid, blocks } = encodeDirectory([indexHTMLBlob, ...imageBlobs.filter(blob => blob)])
+				const chunks = await chunkBlocks(blocks)
+				await uploadCarChunks(identity.signingPrincipal, chunkBlocks(blocks))
+				const CID = await cid
+				this.rootCID = CID
+			}
+
+			const uploadPromiseAll = PProgress.all([imageBlobsPromise, upload()])
+
+			uploadPromiseAll.onProgress((progress) => {
+				const progressBarEl = document.querySelector(SELECTORS.progressBar)
+				progressBarEl.setAttribute('value', progress * 100)
+				progressBarEl.innerText = `${Math.round(progress * 100)}%`
 			})
-		)
 
-		const upload = async () => {
-			const imageBlobs = await imageBlobsPromise
-			const identity = await loadDefaultIdentity()
-			const { cid, blocks } = encodeDirectory([indexHTMLBlob, ...imageBlobs.filter(blob => blob)])
-			const chunks = await chunkBlocks(blocks)
-			await uploadCarChunks(identity.signingPrincipal, chunkBlocks(blocks))
-			const CID = await cid
-			console.log('Uploaded to', `https://${CID.toString()}.ipfs.w3s.link`)
+			uploadPromiseAll.then(() => {
+				this.toggleUploadLink(`https://${this.rootCID.toString()}.ipfs.w3s.link`)
+			})
 		}
-
-		const uploadPromiseAll = PProgress.all([imageBlobsPromise, upload()])
-
-		uploadPromiseAll.onProgress((progress) => {
-			const progressBarEl = document.querySelector(SELECTORS.progressBar)
-			progressBarEl.setAttribute('value', progress * 100)
-			progressBarEl.innerText = `${Math.round(progress * 100)}%`
-		})
-
 	}
 }
 
