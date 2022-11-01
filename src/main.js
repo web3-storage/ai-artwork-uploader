@@ -25,6 +25,10 @@ const SELECTORS = {
 	signOutButton: '#sign-out',
 	verificationTemplate: '#verification-required-template',
 	confirmationTemplate: '#registration-success-template',
+  uploadConfirmation: '#upload-confirmation',
+  uploadProgress: '#upload-started',
+  uploadConfirmationGallery: '#upload-confirmation-gallery',
+  uploadConfirmButton: '#upload-confirm-button',
 	uploadTemplate: '#upload-template',
 	progressBar: '#upload-progress',
 	uploadLink: '#upload-link'
@@ -73,10 +77,28 @@ export class RegisterForm extends window.HTMLElement {
 
 	toggleConfirmation () {
 		const templateContent = this.confirmationTemplate$.content
+
+    const gallery = templateContent.querySelector(SELECTORS.uploadConfirmationGallery)
+
+    const searchParams = new URLSearchParams(window.location.search)
+    const imageURLs = searchParams.get('images').split(',')
+
+    for (const imageURL of imageURLs) {
+      var imageElement = document.createElement("img");
+      imageElement.setAttribute("src", imageURL);
+      imageElement.setAttribute("height", "268");
+      imageElement.setAttribute("alt", "Generated Artwork");
+      gallery.appendChild(imageElement);
+    }
+
+
 		this.replaceChildren(this.formatTemplateContent(templateContent))
+
+    this.uploadConfirmButton$ = document.querySelector(SELECTORS.uploadConfirmButton)
+    this.uploadConfirmButton$.addEventListener('click', () => {this.toggleUploadConfirmation()})
+
 		this.signOutButton$ = document.querySelector(SELECTORS.signOutButton)
 		this.signOutButton$.addEventListener('click', this.signOutHandler)
-		this.uploadFiles()
 	}
 
 	toggleVerification () {
@@ -91,6 +113,16 @@ export class RegisterForm extends window.HTMLElement {
 		this.replaceChildren(templateContent)
 		const uploadLink$ = this.querySelector(SELECTORS.uploadLink)
 		uploadLink$.href = url
+	}
+
+  toggleUploadConfirmation () {
+
+    const uploadConfirmation = document.querySelector(SELECTORS.uploadConfirmation)
+    const uploadProgress = document.querySelector(SELECTORS.uploadProgress)
+
+    uploadConfirmation.classList.add("dn")
+    uploadProgress.classList.remove("dn")
+		this.uploadFiles()
 	}
 
 	disconnectedCallback () {

@@ -29,12 +29,23 @@
 		<template id="registration-success-template">
 			<div>
 				<h1 class="near-white">Welcome <span data-email-slot></span>!</h1>
-				<p>Uploading&hellip;</p>
-				<div>
-					<progress id="upload-progress" max="100" value="0">0%</progress>
-				</div>
-				<div>
-					<button id="sign-out" class="f6 br1 ba ph3 pv2 mb2 near-white bg-transparent b--near-white dim pointer">Sign out</button>
+        <div id="upload-confirmation">
+          <p>Images to upload</p>
+          <div id="upload-confirmation-gallery">
+
+          </div>
+					<a id="upload-confirm-button" class="f6 link dim br1 ba ph3 pv2 mb2 dib near-white pointer" role="button">upload</a>
+        </div>
+
+        <div id="upload-started" class="dn">
+          <p>Uploading&hellip;</p>
+          <div>
+            <progress id="upload-progress" max="100" value="0">0%</progress>
+          </div>
+        </div>
+
+        <div>
+					<a id="sign-out" class="f6 link dim br1 ba ph3 pv2 mb2 dib near-white pointer" role="button">Sign Out</a>
 				</div>
 			</div>
 		</template>
