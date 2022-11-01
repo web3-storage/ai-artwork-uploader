@@ -25,10 +25,10 @@ const SELECTORS = {
 	signOutButton: '#sign-out',
 	verificationTemplate: '#verification-required-template',
 	confirmationTemplate: '#registration-success-template',
-  uploadConfirmation: '#upload-confirmation',
-  uploadProgress: '#upload-started',
-  uploadConfirmationGallery: '#upload-confirmation-gallery',
-  uploadConfirmButton: '#upload-confirm-button',
+	uploadConfirmation: '#upload-confirmation',
+	uploadProgress: '#upload-started',
+	uploadConfirmationGallery: '#upload-confirmation-gallery',
+	uploadConfirmButton: '#upload-confirm-button',
 	uploadTemplate: '#upload-template',
 	progressBar: '#upload-progress',
 	uploadLink: '#upload-link'
@@ -178,7 +178,7 @@ export class RegisterForm extends window.HTMLElement {
 	}
 
 	renderHTMLContactSheet (imgs, params, prompt) {
-		const imgElms = imgs.map((img, index) => `<img src="/${index}.png"/>`).join('')
+		const imgElms = imgs.map((img, index) => `<a href="${index}.png"><img src="${index}.png"/></a>`).join('')
 
 		let paramList = ''
 		for (const [key, value] of Object.entries(params)) {
