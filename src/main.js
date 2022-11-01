@@ -56,16 +56,30 @@ export class RegisterForm extends window.HTMLElement {
 	}
 
 	async connectedCallback () {
-		this.form$.addEventListener('submit', this.submitHandler)
-
 		const identity = await loadDefaultIdentity()
 
 		if (identity) {
-			this.identity = identity
+      this.identity = identity
 			this.email = identity.email
 			this.toggleConfirmation()
 			console.log(`DID: ${identity.signingPrincipal.did()}`)
 		} else {
+      this.form$.addEventListener('submit', this.submitHandler)
+
+      const thumbnails = document.getElementById('thumbnails')
+
+
+      const searchParams = new URLSearchParams(window.location.search)
+      const imagesParams = searchParams.get('images')
+      const imageURLs = imagesParams ? imagesParams.split(',') : []
+
+      for (const imageURL of imageURLs) {
+        var imageElement = document.createElement("img");
+        imageElement.setAttribute("src", imageURL);
+        imageElement.setAttribute("alt", "Generated Artwork");
+        imageElement.setAttribute("class", "h3 mr2");
+        thumbnails.appendChild(imageElement);
+      }
 			console.log('No identity registered')
 		}
 	}
@@ -87,12 +101,14 @@ export class RegisterForm extends window.HTMLElement {
 		for (const imageURL of imageURLs) {
 			var imageElement = document.createElement("img");
 			imageElement.setAttribute("src", imageURL);
-			imageElement.setAttribute("height", "268");
 			imageElement.setAttribute("alt", "Generated Artwork");
+			imageElement.setAttribute("class", "mr2");
 			gallery.appendChild(imageElement);
 		}
 
-		this.replaceChildren(this.formatTemplateContent(templateContent))
+    const toReplace = this.formatTemplateContent(templateContent)
+    toReplace.querySelector('[data-image-number-slot]').innerHTML = imageURLs.length
+		this.replaceChildren(toReplace)
 
 		this.uploadConfirmButton$ = document.querySelector(SELECTORS.uploadConfirmButton)
 		this.uploadConfirmButton$.addEventListener('click', () => {this.toggleUploadConfirmation()})
