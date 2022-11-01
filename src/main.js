@@ -78,24 +78,24 @@ export class RegisterForm extends window.HTMLElement {
 	toggleConfirmation () {
 		const templateContent = this.confirmationTemplate$.content
 
-    const gallery = templateContent.querySelector(SELECTORS.uploadConfirmationGallery)
+		const gallery = templateContent.querySelector(SELECTORS.uploadConfirmationGallery)
 
-    const searchParams = new URLSearchParams(window.location.search)
-    const imageURLs = searchParams.get('images').split(',')
+		const searchParams = new URLSearchParams(window.location.search)
+		const imagesParams = searchParams.get('images')
+		const imageURLs = imagesParams ? imagesParams.split(',') : []
 
-    for (const imageURL of imageURLs) {
-      var imageElement = document.createElement("img");
-      imageElement.setAttribute("src", imageURL);
-      imageElement.setAttribute("height", "268");
-      imageElement.setAttribute("alt", "Generated Artwork");
-      gallery.appendChild(imageElement);
-    }
-
+		for (const imageURL of imageURLs) {
+			var imageElement = document.createElement("img");
+			imageElement.setAttribute("src", imageURL);
+			imageElement.setAttribute("height", "268");
+			imageElement.setAttribute("alt", "Generated Artwork");
+			gallery.appendChild(imageElement);
+		}
 
 		this.replaceChildren(this.formatTemplateContent(templateContent))
 
-    this.uploadConfirmButton$ = document.querySelector(SELECTORS.uploadConfirmButton)
-    this.uploadConfirmButton$.addEventListener('click', () => {this.toggleUploadConfirmation()})
+		this.uploadConfirmButton$ = document.querySelector(SELECTORS.uploadConfirmButton)
+		this.uploadConfirmButton$.addEventListener('click', () => {this.toggleUploadConfirmation()})
 
 		this.signOutButton$ = document.querySelector(SELECTORS.signOutButton)
 		this.signOutButton$.addEventListener('click', this.signOutHandler)
@@ -115,13 +115,13 @@ export class RegisterForm extends window.HTMLElement {
 		uploadLink$.href = url
 	}
 
-  toggleUploadConfirmation () {
+	toggleUploadConfirmation () {
 
-    const uploadConfirmation = document.querySelector(SELECTORS.uploadConfirmation)
-    const uploadProgress = document.querySelector(SELECTORS.uploadProgress)
+		const uploadConfirmation = document.querySelector(SELECTORS.uploadConfirmation)
+		const uploadProgress = document.querySelector(SELECTORS.uploadProgress)
 
-    uploadConfirmation.classList.add("dn")
-    uploadProgress.classList.remove("dn")
+		uploadConfirmation.classList.add("dn")
+		uploadProgress.classList.remove("dn")
 		this.uploadFiles()
 	}
 
@@ -212,13 +212,13 @@ export class RegisterForm extends window.HTMLElement {
 		const description = searchParams.get('description')
 		const parametersString = searchParams.get('params')
 		const parameters = JSON.parse(parametersString)
-		const imageURLs = searchParams.get('images').split(',')
+		const imagesParams = searchParams.get('images') || ''
+		const imageURLs = imagesParams ? imagesParams.split(',') : []
 		const indexHTML = this.renderHTMLContactSheet(imageURLs, parameters, description)
 		const blob = new Blob([indexHTML], {
 			type: 'text/plain;charset=utf-8',
 		});
 		const indexHTMLBlob = new File([blob], 'index.html')
-
 
 		if (imageURLs.length > 0) {
 			const imageBlobsPromise = PProgress.all(
