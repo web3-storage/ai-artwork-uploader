@@ -19,7 +19,7 @@
 							<label htmlFor="email" class="db mb2">Email address:</label>
 							<input name="email" id="email" class="db pa2 w-100" type="email" required />
 						</div>
-						<button type="submit" class="ph3 pv2">Register</button>
+						<button type="submit" class="f6 br1 ba ph3 pv2 mb2 near-white bg-transparent b--near-white dim pointer">Register</button>
 					</form>
 				</register-form>
 			</div>
@@ -34,17 +34,18 @@
 					<progress id="upload-progress" max="100" value="0">0%</progress>
 				</div>
 				<div>
-					<a id="sign-out" class="f6 link dim br1 ba ph3 pv2 mb2 dib near-white pointer" role="button">Sign Out</a>
+					<button id="sign-out" class="f6 br1 ba ph3 pv2 mb2 near-white bg-transparent b--near-white dim pointer">Sign out</button>
 				</div>
 			</div>
 		</template>
 
 		<!-- Verification -->
 		<template id="verification-required-template">
+			<span class="spinner dib"></span>
 			<div>
 				<h1 class="near-white">Verify your email address!</h1>
 				<p>Click the link in the email we sent to <span data-email-slot></span> to sign in.</p>
-				<button type="button" id="cancel-registration" class="ph3 pv2">Cancel</button>
+				<button id="cancel-registration" class="f6 br1 ba ph3 pv2 mb2 near-white bg-transparent b--near-white dim pointer">Cancel</button>
 			</div>
 		</template>
 
@@ -57,7 +58,6 @@
 				</div>
 			</div>
 		</template>
-
 
 		<script type="module" src="main.js"></script>
 	</body>

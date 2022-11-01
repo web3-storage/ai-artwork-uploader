@@ -1,4 +1,5 @@
 import './assets/tachyons.min.css'
+import './assets/spinner.css'
 
 import pProgress, { PProgress } from 'p-progress'
 
