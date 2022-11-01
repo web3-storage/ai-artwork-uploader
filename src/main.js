@@ -189,20 +189,37 @@ export class RegisterForm extends window.HTMLElement {
 		const paramsEl = `<h1>Parameters</h1><dl>${paramList}</dl>`
 
 		const html = `
-	<!DOCTYPE html>
-	<html>
-		<head>
-		<style>
-			.images img {
-				padding: 12px;
-			}
-		</style>
-		</head>
-		<body>
-			${promptEl}${paramsEl}<div class='images'>${imgElms}</div>
-		</body>
-	</html>
-	`
+<!DOCTYPE html>
+<html>
+	<head>
+	<style>
+		body {
+			font-family:-apple-system, BlinkMacSystemFont,
+			'avenir next', avenir,
+			'helvetica neue', helvetica,
+			ubuntu,
+			roboto, noto,
+			'segoe ui', arial,
+			sans-serif;
+			margin: 20px;
+			background-color: #f4f4f4;
+			color: #111111;
+		}
+
+		.images a {
+			display: inline-block;
+		}
+
+		.images img {
+			padding: 12px;
+		}
+	</style>
+	</head>
+	<body>
+		${promptEl}${paramsEl}<div class='images'>${imgElms}</div>
+	</body>
+</html>
+`
 
 		return html.trim()
 	}
