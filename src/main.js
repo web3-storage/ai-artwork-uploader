@@ -286,7 +286,9 @@ export class RegisterForm extends window.HTMLElement {
 			})
 
 			uploadPromiseAll.then(() => {
-				this.toggleUploadLink(`https://${this.rootCID.toString()}.ipfs.w3s.link`)
+				const url = `https://${this.rootCID.toString()}.ipfs.w3s.link`
+				this.toggleUploadLink(url)
+				window.open(url)
 			})
 		}
 	}
