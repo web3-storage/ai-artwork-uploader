@@ -45,6 +45,7 @@ export class RegisterForm extends window.HTMLElement {
 		this.identity = null
 		this.email = null
 		this.rootCID = null
+		this.rootURL = null
 		this.form$ = document.querySelector(SELECTORS.authForm)
 		this.confirmationTemplate$ = document.querySelector(SELECTORS.confirmationTemplate)
 		this.verificationTemplate$ = document.querySelector(SELECTORS.verificationTemplate)
@@ -52,6 +53,7 @@ export class RegisterForm extends window.HTMLElement {
 		this.submitHandler = this.submitHandler.bind(this)
 		this.cancelRegistrationHandler = this.cancelRegistrationHandler.bind(this)
 		this.signOutHandler = this.signOutHandler.bind(this)
+		this.copyLinkHandler = this.copyLinkHandler.bind(this)
 		this.formatTemplateContent = this.formatTemplateContent.bind(this)
 	}
 
@@ -64,22 +66,21 @@ export class RegisterForm extends window.HTMLElement {
 			this.toggleConfirmation()
 			console.log(`DID: ${identity.signingPrincipal.did()}`)
 		} else {
-      this.form$.addEventListener('submit', this.submitHandler)
+			this.form$.addEventListener('submit', this.submitHandler)
 
-      const thumbnails = document.getElementById('thumbnails')
+			const thumbnails = document.getElementById('thumbnails')
 
+			const searchParams = new URLSearchParams(window.location.search)
+			const imagesParams = searchParams.get('images')
+			const imageURLs = imagesParams ? imagesParams.split(',') : []
 
-      const searchParams = new URLSearchParams(window.location.search)
-      const imagesParams = searchParams.get('images')
-      const imageURLs = imagesParams ? imagesParams.split(',') : []
-
-      for (const imageURL of imageURLs) {
-        var imageElement = document.createElement("img");
-        imageElement.setAttribute("src", imageURL);
-        imageElement.setAttribute("alt", "Generated Artwork");
-        imageElement.setAttribute("class", "h3 mr2");
-        thumbnails.appendChild(imageElement);
-      }
+			for (const imageURL of imageURLs) {
+				var imageElement = document.createElement("img");
+				imageElement.setAttribute("src", imageURL);
+				imageElement.setAttribute("alt", "Generated Artwork");
+				imageElement.setAttribute("class", "h3 mr2");
+				thumbnails.appendChild(imageElement);
+			}
 			console.log('No identity registered')
 		}
 	}
@@ -128,11 +129,10 @@ export class RegisterForm extends window.HTMLElement {
 		const templateContent = this.uploadTemplate$.content
 		this.replaceChildren(templateContent)
 		const uploadLink$ = this.querySelector(SELECTORS.uploadLink)
-		uploadLink$.href = url
+		uploadLink$.addEventListener('click', this.copyLinkHandler)
 	}
 
 	toggleUploadConfirmation () {
-
 		const uploadConfirmation = document.querySelector(SELECTORS.uploadConfirmation)
 		const uploadProgress = document.querySelector(SELECTORS.uploadProgress)
 
@@ -148,6 +148,11 @@ export class RegisterForm extends window.HTMLElement {
 	async cancelRegistrationHandler (e) {
 		e.preventDefault()
 		window.location.reload()
+	}
+
+	async copyLinkHandler (e) {
+		e.preventDefault()
+		await navigator.clipboard.writeText(this.rootURL)
 	}
 
 	async signOutHandler (e) {
@@ -287,6 +292,7 @@ export class RegisterForm extends window.HTMLElement {
 
 			uploadPromiseAll.then(() => {
 				const url = `https://${this.rootCID.toString()}.ipfs.w3s.link`
+				this.rootURL = url
 				this.toggleUploadLink(url)
 				window.open(url)
 			})
