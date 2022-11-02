@@ -46,6 +46,7 @@ export class RegisterForm extends window.HTMLElement {
 		this.email = null
 		this.rootCID = null
 		this.rootURL = null
+    this.uploadData = {}
 		this.form$ = document.querySelector(SELECTORS.authForm)
 		this.confirmationTemplate$ = document.querySelector(SELECTORS.confirmationTemplate)
 		this.verificationTemplate$ = document.querySelector(SELECTORS.verificationTemplate)
@@ -58,6 +59,12 @@ export class RegisterForm extends window.HTMLElement {
 	}
 
 	async connectedCallback () {
+
+    if (!this.validateURLParams()) {
+      return;
+    }
+
+    // Load the user
 		const identity = await loadDefaultIdentity()
 
 		if (identity) {
@@ -70,11 +77,7 @@ export class RegisterForm extends window.HTMLElement {
 
 			const thumbnails = document.getElementById('thumbnails')
 
-			const searchParams = new URLSearchParams(window.location.search)
-			const imagesParams = searchParams.get('images')
-			const imageURLs = imagesParams ? imagesParams.split(',') : []
-
-			for (const imageURL of imageURLs) {
+			for (const imageURL of this.uploadData.imageURLs) {
 				var imageElement = document.createElement("img");
 				imageElement.setAttribute("src", imageURL);
 				imageElement.setAttribute("alt", "Generated Artwork");
@@ -84,6 +87,53 @@ export class RegisterForm extends window.HTMLElement {
 			console.log('No identity registered')
 		}
 	}
+
+  validateURLParams () {
+    const searchParams = new URLSearchParams(window.location.search)
+
+    if (!window.location.search) {
+      this.toggleEmptyPage()
+      return false;
+    }
+
+    const images = searchParams.get('images')
+    const imageURLs = images ? images.split(',') : null
+    const description = searchParams.get('description')
+		const parametersString = searchParams.get('params')
+    let parsedParameters = null
+
+    try {
+      parsedParameters = JSON.parse(parametersString);
+    } catch (error) {
+      console.error(error);
+      this.toggleErrorPage()
+      return false
+    }
+
+    if (
+      (!imageURLs || imageURLs.length < 0)
+      || !description
+      || !parsedParameters
+    ) {
+      console.error('Invalid query parameters')
+      this.toggleErrorPage()
+      return false
+    }
+
+    this.uploadData.imageURLs = imageURLs
+    this.uploadData.description = description
+    this.uploadData.parameters = parsedParameters
+    return true
+  }
+
+  toggleEmptyPage () {
+    console.log('togg empty')
+  }
+
+  toggleErrorPage () {
+    console.log('togg err')
+
+  }
 
 	formatTemplateContent (templateContent) {
 		templateContent.querySelector('[data-email-slot]').innerHTML = this.email
@@ -95,11 +145,7 @@ export class RegisterForm extends window.HTMLElement {
 
 		const gallery = templateContent.querySelector(SELECTORS.uploadConfirmationGallery)
 
-		const searchParams = new URLSearchParams(window.location.search)
-		const imagesParams = searchParams.get('images')
-		const imageURLs = imagesParams ? imagesParams.split(',') : []
-
-		for (const imageURL of imageURLs) {
+		for (const imageURL of this.uploadData.imageURLs) {
 			var imageElement = document.createElement("img");
 			imageElement.setAttribute("src", imageURL);
 			imageElement.setAttribute("alt", "Generated Artwork");
@@ -108,7 +154,7 @@ export class RegisterForm extends window.HTMLElement {
 		}
 
     const toReplace = this.formatTemplateContent(templateContent)
-    toReplace.querySelector('[data-image-number-slot]').innerHTML = imageURLs.length
+    toReplace.querySelector('[data-image-number-slot]').innerHTML = this.uploadData.imageURLs.length
 		this.replaceChildren(toReplace)
 
 		this.uploadConfirmButton$ = document.querySelector(SELECTORS.uploadConfirmButton)
@@ -246,12 +292,12 @@ export class RegisterForm extends window.HTMLElement {
 	}
 
 	uploadFiles () {
-		const searchParams = new URLSearchParams(window.location.search)
-		const description = searchParams.get('description')
-		const parametersString = searchParams.get('params')
-		const parameters = JSON.parse(parametersString)
-		const imagesParams = searchParams.get('images') || ''
-		const imageURLs = imagesParams ? imagesParams.split(',') : []
+    const {
+      imageURLs,
+      parameters,
+      description
+    } = this.uploadData
+
 		const indexHTML = this.renderHTMLContactSheet(imageURLs, parameters, description)
 		const blob = new Blob([indexHTML], {
 			type: 'text/plain;charset=utf-8',
