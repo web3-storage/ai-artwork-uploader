@@ -87,6 +87,27 @@
 			</div>
 		</template>
 
+    <!-- Empty State -->
+		<template id="empty-state-template">
+			<div>
+				<h1 class="f3 fw3">Welcome!</h1>
+				<p class="fw3 lh-copy">This is ai-artwork-uploader, a project that makes it easy to share your AI generated artwork on web3.storage.</p>
+        <p class="fw3 lh-copy">web3.storage relies on decentralized storage to store your files for free on the network. Decentralized storage is a technique for storing data that, instead of traditional servers, uses a distributed network with many participants providing storage capacity. <a class="fw4 near-white dim no-underline" href="https://web3.storage/docs/concepts/decentralized-storage/" target="_blank">Read more.</a></p>
+				<p class="fw3 lh-copy">Download and try the <a class="fw4 near-white dim no-underline" href="https://diffusionbee.com/" target="_blank">DiffusionBee UI</a> to generate AI artwork.</p>
+        <p class="fw3 lh-copy"><a class="fw4 near-white dim no-underline" href="https://github.com/web3-storage/ai-artwork-uploader/issues/new" target="_blank">See more about this project on GitHub.</a></p>
+			</div>
+		</template>
+
+    <!-- Error -->
+		<template id="generic-error-template">
+			<div>
+				<h1 class="f3 fw3">Oh No!</h1>
+				<p class="fw3 lh-copy">Something went wrong, please submit an issue to <a class="fw4 near-white dim no-underline" href="https://github.com/web3-storage/ai-artwork-uploader/issues/new" target="_blank">our project on GitHub</a> and we'll look into it.</p>
+        <p class="fw3 lh-copy">Thanks!</p>
+				<a href="javascript:window.location.href=window.location.href" class="f6 link dim br-pill ba bw2 ph3 pv2 mb2 dib near-white">Retry</a>
+			</div>
+		</template>
+
 		<!-- Uploaded -->
 		<template id="upload-template">
 			<div>

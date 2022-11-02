@@ -31,7 +31,9 @@ const SELECTORS = {
 	uploadConfirmButton: '#upload-confirm-button',
 	uploadTemplate: '#upload-template',
 	progressBar: '#upload-progress',
-	uploadLink: '#upload-link'
+	uploadLink: '#upload-link',
+  emptyStateTemplate: '#empty-state-template',
+  genericErrorTemplate: '#generic-error-template'
 }
 
 export const EVENTS = {
@@ -50,6 +52,8 @@ export class RegisterForm extends window.HTMLElement {
 		this.form$ = document.querySelector(SELECTORS.authForm)
 		this.confirmationTemplate$ = document.querySelector(SELECTORS.confirmationTemplate)
 		this.verificationTemplate$ = document.querySelector(SELECTORS.verificationTemplate)
+    this.emptyStateTemplate$ = document.querySelector(SELECTORS.emptyStateTemplate)
+    this.genericErrorTemplate$ = document.querySelector(SELECTORS.genericErrorTemplate)
 		this.uploadTemplate$ = document.querySelector(SELECTORS.uploadTemplate)
 		this.submitHandler = this.submitHandler.bind(this)
 		this.cancelRegistrationHandler = this.cancelRegistrationHandler.bind(this)
@@ -128,11 +132,16 @@ export class RegisterForm extends window.HTMLElement {
 
   toggleEmptyPage () {
     console.log('togg empty')
+
+    const templateContent = this.emptyStateTemplate$.content
+		this.replaceChildren(templateContent)
   }
 
   toggleErrorPage () {
     console.log('togg err')
 
+    const templateContent = this.genericErrorTemplate$.content
+		this.replaceChildren(templateContent)
   }
 
 	formatTemplateContent (templateContent) {
