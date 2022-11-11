@@ -28,7 +28,7 @@
 		</style>
 	</head>
 	<body style="background-color:#1d2027;">
-		<div id="app" class="vh-100 flex flex-column justify-center items-center sans-serif light-gray">
+		<div id="app" class="flex flex-column justify-center items-center sans-serif light-gray">
 			<header>
 				<div class="site-logo-container pv4">
 					<a class="anchor-wrapper" tabindex="0" href="/"><svg class="site-logo-image" viewBox="0 0 27.2 27.18" xmlns="http://www.w3.org/2000/svg"><path d="M13.6 27.18A13.59 13.59 0 1127.2 13.6a13.61 13.61 0 01-13.6 13.58zM13.6 2a11.59 11.59 0 1011.6 11.6A11.62 11.62 0 0013.6 2z" fill="current"></path><path d="M12.82 9.9v2.53h1.6V9.9l2.09 1.21.77-1.21-2.16-1.32 2.16-1.32-.77-1.21-2.09 1.21V4.73h-1.6v2.53l-2-1.21L10 7.26l2.2 1.32L10 9.9l.78 1.21zM18 17.79v2.52h1.56v-2.52L21.63 19l.78-1.2-2.16-1.33 2.16-1.28-.78-1.19-2.08 1.2v-2.58H18v2.56L15.9 14l-.77 1.2 2.16 1.32-2.16 1.33.77 1.15zM8.13 17.79v2.52h1.56v-2.52L11.82 19l.77-1.2-2.16-1.33 2.12-1.28-.73-1.24-2.13 1.23v-2.56H8.13v2.56L6.05 14l-.78 1.2 2.16 1.3-2.16 1.33.78 1.17z" fill="current"></path></svg><div class="site-logo-text dark">web3.storage</div></a>
@@ -38,7 +38,10 @@
 				<register-form>
           <div id="thumbnails" class="flex flex-wrap mt3"></div>
           <h1 class="f3 fw3">Use web3.storage to store and share your artwork.</h1>
-          <p class="fw3 lh-copy">web3.storage relies on decentralized storage to store your files for free on the network. Decentralized storage is a technique for storing data that, instead of traditional servers, uses a distributed network with many participants providing storage capacity. <a class="fw4 near-white dim no-underline" href="https://web3.storage/docs/concepts/decentralized-storage/" target="_blank">Read more.</a></p>
+          <p class="fw3 lh-copy">Why use web3.storage to host and store your art? Well, it allows you to have a universal identifier (like a fingerprint) for your artwork and the metadata used to generate that art (the seed number, engine type, etc.). You can link to your art using these universal identifiers rather than having to keep track of file names, where you stored the data, or how you generated the art. This makes it easier to reference and track your art as other people share it, it gets moved around and stored in multiple places, and you want to take credit for it in the future.</p>
+          <p class="fw3 lh-copy">How does web3.storage do this? web3.storage is a performant and easy-to-use hosted IPFS solution. IPFS gives you the ability to reference and access your data using this unique identifier using cryptography.</p>
+          <p class="fw3 lh-copy">If this sounds like blockchain mumbo jumbo to you, you're half right! With IPFS and ai-artwork-uploader, you can get similar cryptographic guarantees as those blockchains provide without having to mess around with crypto at all.</p>
+          <p class="fw3 lh-copy">But if you are into NFTs, ai-artwork-uploader makes your art NFT-ready. Just stick the universal identifier into an NFT to prove you're the first person to create the art, and others can verify this by looking at the timestamp the NFT was created, the metadata you used to generate the art, and the art itself.</p>
 					<p class="fw3 lh-copy">First sign in or register with your email to upload your art to Web3.storage.</p>
 					<form id="sign-up-in-form" class="auth__form" action="">
 						<div class="mb3">
