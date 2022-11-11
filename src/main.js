@@ -158,7 +158,7 @@ export class RegisterForm extends window.HTMLElement {
 			var imageElement = document.createElement("img");
 			imageElement.setAttribute("src", imageURL);
 			imageElement.setAttribute("alt", "Generated Artwork");
-			imageElement.setAttribute("class", "mr2");
+			imageElement.setAttribute("class", "h3 mr2");
 			gallery.appendChild(imageElement);
 		}
 
