@@ -15,6 +15,7 @@ import {
 
 import {
 	encodeDirectory,
+  encodeFile,
 	chunkBlocks,
 	uploadCarChunks
 } from '@w3ui/uploader-core'
@@ -254,45 +255,99 @@ export class RegisterForm extends window.HTMLElement {
 	}
 
 	renderHTMLContactSheet (imgs, params, prompt) {
-		const imgElms = imgs.map((img, index) => `<a href="${index}.png"><img src="${index}.png"/></a>`).join('')
+		const getGatewayLink = cid => `https://${cid.toString()}.ipfs.w3s.link/`
+
+		const imgElms = imgs.map((img, index) => {
+			return `<a href="${getGatewayLink(img.CID)}"><img src="${getGatewayLink(img.CID)}"/><p>${img.CID}</p></a>`
+		}).join('')
 
 		let paramList = ''
 		for (const [key, value] of Object.entries(params)) {
 			paramList += `<dt>${key}</dt><dd>${value}</dd>`
 		}
 
-		const promptEl = `<h1>Prompt</h1><p>${prompt}</p>`
-		const paramsEl = `<h1>Parameters</h1><dl>${paramList}</dl>`
-
 		const html = `
 <!DOCTYPE html>
 <html>
 	<head>
+	<meta charset="utf-8">
+	<title>Art</title>
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="Art">
+	<meta name="twitter:description" content="Painting of a dog eating a banana in the style of Hockney">
+	<meta name="twitter:image" content="${getGatewayLink(imgs[0].CID)}" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="Art">
+	<meta property="og:description" content="${prompt}" />
+	<meta property="og:image" content="${getGatewayLink(imgs[0].CID)}" />
 	<style>
 		body {
-			font-family:-apple-system, BlinkMacSystemFont,
-			'avenir next', avenir,
-			'helvetica neue', helvetica,
-			ubuntu,
-			roboto, noto,
-			'segoe ui', arial,
-			sans-serif;
-			margin: 20px;
-			background-color: #f4f4f4;
-			color: #111111;
+			background-color: #1d2027;
+			color: #f4f4f4;
+			font-family:-apple-system, BlinkMacSystemFont, 'avenir next', avenir, 'helvetica neue', helvetica, ubuntu, roboto, noto, 'segoe ui', arial, sans-serif;
+			line-height: 1.5;
+			margin: 24px;
+		}
+
+		a {
+			color: #f4f4f4;
+		}
+
+		dl {
+			column-gap: 24px;
+			display: grid;
+			grid-template-columns: max-content 2fr;
+			line-height: 1.5;
+		}
+
+		dd {
+			margin: 0;
+		}
+
+		dt {
+			font-weight: bold;
+		}
+
+		.images {
+			display: grid;
+			gap: 24px;
+			grid-template-columns: repeat(1, 1fr);
+		}
+
+		@media screen and (min-width: 800px) {
+			.images {
+				grid-template-columns: repeat(2, 1fr);
+			}
 		}
 
 		.images a {
 			display: inline-block;
+			font-weight: 100;
+			text-decoration: none;
+		}
+
+		.images a p::after {
+			content: " ⤵";
 		}
 
 		.images img {
-			padding: 12px;
+			width: 100%;
 		}
 	</style>
 	</head>
 	<body>
-		${promptEl}${paramsEl}<div class='images'>${imgElms}</div>
+		<div class='images'>${imgElms}</div>
+		<div class='metadata'>
+			<div>
+				<h1 style="font-weight: 900;">Prompt</h1>
+				<p>${prompt}</p>
+			</div>
+			<div>
+				<h1 style="font-weight: 900;">Parameters</h1>
+				<dl>${paramList}</dl>
+			</div>
+		</div>
+		<p style="margin-top: 2em; margin-bottom: 1em; font-weight: 100;">Generate your own art with <a href="https://diffusionbee.com/" target="_blank">DiffusionBee</a>! Gallery and image hosted on IPFS with <a href="https://web3.storage/" target="_blank">web3.storage.</a></p>
 	</body>
 </html>
 `
@@ -307,20 +362,18 @@ export class RegisterForm extends window.HTMLElement {
       description
     } = this.uploadData
 
-		const indexHTML = this.renderHTMLContactSheet(imageURLs, parameters, description)
-		const blob = new Blob([indexHTML], {
-			type: 'text/plain;charset=utf-8',
-		});
-		const indexHTMLBlob = new File([blob], 'index.html')
-
 		if (imageURLs.length > 0) {
-			const imageBlobsPromise = PProgress.all(
+			const imageBlobsPromise = Promise.all(
 				imageURLs.map(async (url, index) => {
 					try {
 						const response = await fetch(url)
 						const blob = await response.blob()
 						const file = new File([blob], `${index}.png`)
-						return file
+						const { cid, blocks } = await encodeFile(file)
+						const chunks = await chunkBlocks(blocks)
+						await chunks.next()  // Need to tap into stream in order to get the CID
+						const CID = await cid
+						return { file, CID, url }
 					} catch {
 						return undefined
 					}
@@ -328,9 +381,14 @@ export class RegisterForm extends window.HTMLElement {
 			)
 
 			const upload = async () => {
-				const imageBlobs = await imageBlobsPromise
 				const identity = await loadDefaultIdentity()
-				const { cid, blocks } = encodeDirectory([indexHTMLBlob, ...imageBlobs.filter(blob => blob)])
+				const imageBlobs = await imageBlobsPromise
+				const indexHTML = this.renderHTMLContactSheet(imageBlobs, parameters, description)
+				const blob = new Blob([indexHTML], {
+					type: 'text/plain;charset=utf-8',
+				});
+				const indexHTMLBlob = new File([blob], 'index.html')
+				const { cid, blocks } = encodeDirectory([indexHTMLBlob, ...imageBlobs.filter(blob => blob).map(blob => blob.file)])
 				const chunks = await chunkBlocks(blocks)
 				await uploadCarChunks(identity.signingPrincipal, chunkBlocks(blocks))
 				const CID = await cid
@@ -349,7 +407,11 @@ export class RegisterForm extends window.HTMLElement {
 				const url = `https://${this.rootCID.toString()}.ipfs.w3s.link`
 				this.rootURL = url
 				this.toggleUploadLink(url)
-				window.open(url)
+				if (window.ipcRenderer) {  // electron context
+					window.ipcRenderer.sendSync('open_url', url)
+				} else {
+					window.open(url)
+				}
 			})
 		}
 	}
