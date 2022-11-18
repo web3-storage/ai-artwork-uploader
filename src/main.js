@@ -253,7 +253,7 @@ export class RegisterForm extends window.HTMLElement {
     }
   }
 
-  async renderHTMLContactSheet (imgs, metadata, params, prompt) {
+  renderHTMLContactSheet (imgs, metadata, params, prompt) {
     const getGatewayLink = cid => `https://${cid.toString()}.ipfs.w3s.link/`
 
     const imgElms = imgs.map((img, index) => {
@@ -275,7 +275,7 @@ export class RegisterForm extends window.HTMLElement {
   <title>Art</title>
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Art">
-  <meta name="twitter:description" content="Painting of a dog eating a banana in the style of Hockney">
+  <meta name="twitter:description" content="${prompt}">
   <meta name="twitter:image" content="${getGatewayLink(imgs[0].CID)}" />
   <meta property="og:type" content="article" />
   <meta property="og:title" content="Art">
@@ -409,7 +409,7 @@ export class RegisterForm extends window.HTMLElement {
         const identity = await loadDefaultIdentity()
         const imageBlobs = await imageBlobsPromise
         const metadataBlob = await uploadJSONMetadata(description, parameters)
-        const indexHTML = await this.renderHTMLContactSheet(imageBlobs, metadataBlob, parameters, description)
+        const indexHTML = this.renderHTMLContactSheet(imageBlobs, metadataBlob, parameters, description)
         const blob = new Blob([indexHTML], {
           type: 'text/plain;charset=utf-8'
         })
