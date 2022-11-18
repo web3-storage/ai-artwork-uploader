@@ -253,12 +253,14 @@ export class RegisterForm extends window.HTMLElement {
     }
   }
 
-  renderHTMLContactSheet (imgs, params, prompt) {
+  async renderHTMLContactSheet (imgs, metadata, params, prompt) {
     const getGatewayLink = cid => `https://${cid.toString()}.ipfs.w3s.link/`
 
     const imgElms = imgs.map((img, index) => {
       return `<a href="${getGatewayLink(img.CID)}"><img src="${getGatewayLink(img.CID)}"/><p>${img.CID}</p></a>`
     }).join('')
+
+    const metadataLink = `<p>Metadata JSON hosted on IPFS: <a href="${getGatewayLink(metadata.CID)}">${metadata.CID}</a></p>`
 
     let paramList = ''
     for (const [key, value] of Object.entries(params)) {
@@ -325,6 +327,7 @@ export class RegisterForm extends window.HTMLElement {
       text-decoration: none;
     }
 
+    .metadata-link,
     .images a p::after {
       content: " ⤵";
     }
@@ -345,6 +348,7 @@ export class RegisterForm extends window.HTMLElement {
         <h1 style="font-weight: 900;">Parameters</h1>
         <dl>${paramList}</dl>
       </div>
+      <div class="metadata-link">${metadataLink}</div>
     </div>
     <p style="margin-top: 2em; margin-bottom: 1em; font-weight: 100;">Generate your own art with <a href="https://diffusionbee.com/" target="_blank">DiffusionBee</a>! Gallery and image hosted on IPFS with <a href="https://web3.storage/" target="_blank">web3.storage.</a></p>
   </body>
@@ -378,16 +382,39 @@ export class RegisterForm extends window.HTMLElement {
           }
         })
       )
+      const uploadJSONMetadata = async (description, metadata) => {
+        const str = JSON.stringify({
+          description,
+          ...metadata,
+        });
+        const bytes = new TextEncoder().encode(str);
+        const blob = new Blob([bytes], {
+            type: "application/json;charset=utf-8"
+        });
+
+        const file = new File([blob], 'metadata.json')
+
+        try {
+          const { cid, blocks } = await encodeFile(file)
+          const chunks = await chunkBlocks(blocks)
+          await chunks.next() // Need to tap into stream in order to get the CID
+          const CID = await cid
+          return { file, CID }
+        } catch {
+          return undefined
+        }
+      }
 
       const upload = async () => {
         const identity = await loadDefaultIdentity()
         const imageBlobs = await imageBlobsPromise
-        const indexHTML = this.renderHTMLContactSheet(imageBlobs, parameters, description)
+        const metadataBlob = await uploadJSONMetadata(description, parameters)
+        const indexHTML = await this.renderHTMLContactSheet(imageBlobs, metadataBlob, parameters, description)
         const blob = new Blob([indexHTML], {
           type: 'text/plain;charset=utf-8'
         })
         const indexHTMLBlob = new File([blob], 'index.html')
-        const { cid, blocks } = encodeDirectory([indexHTMLBlob, ...imageBlobs.filter(blob => blob).map(blob => blob.file)])
+        const { cid, blocks } = encodeDirectory([indexHTMLBlob, metadataBlob.file, ...imageBlobs.filter(blob => blob).map(blob => blob.file)])
         await chunkBlocks(blocks)
         await uploadCarChunks(identity.signingPrincipal, chunkBlocks(blocks))
         const CID = await cid
