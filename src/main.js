@@ -354,7 +354,6 @@ export class RegisterForm extends window.HTMLElement {
   </body>
 </html>
 `
-
     return html.trim()
   }
 
@@ -385,12 +384,12 @@ export class RegisterForm extends window.HTMLElement {
       const uploadJSONMetadata = async (description, metadata) => {
         const str = JSON.stringify({
           description,
-          ...metadata,
-        });
-        const bytes = new TextEncoder().encode(str);
+          ...metadata
+        })
+        const bytes = new TextEncoder().encode(str)
         const blob = new Blob([bytes], {
-            type: "application/json;charset=utf-8"
-        });
+          type: 'application/json;charset=utf-8'
+        })
 
         const file = new File([blob], 'metadata.json')
 
